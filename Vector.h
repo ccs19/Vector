@@ -14,6 +14,19 @@
 
 #include <stddef.h>
 
+
+//Flag when adding to vector
+//Represents memory type
+enum VECTOR_FLAG{
+    DYNAMIC,
+    STATIC
+};
+
+
+
+
+
+
 typedef struct{
     int size;       //Number of items currently in vector
     int capacity;   //Max size of vector
@@ -35,7 +48,7 @@ Vector *InitVector();
     @param  vector      -- Vector to add symbol to
     @return             -- 1 on success
 */
-int AddToVector(Vector*, void*, size_t, int);
+int AddToVector(Vector*, void*, size_t, enum VECTOR_FLAG);
 
 
 /*  FUNCTION: DeleteByIndex

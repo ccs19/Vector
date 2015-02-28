@@ -51,10 +51,10 @@ Vector *InitVector()
     @param  item        -- item to add
     @param  vector      -- Vector to add item to
     @param  size        -- Size of item in vector
-    @param  alloc       -- If item needs memory allocated
+    @param  flag       -- Flag corresponding to memory type of item
     @return             -- 1 on success, 0 on failure
 */
-int AddToVector(Vector *vector, void *item, size_t size, int alloc)
+int AddToVector(Vector *vector, void *item, size_t size, enum VECTOR_FLAG flag)
 {
     int success = 1; //Assume result
     void* newItem = item;
@@ -62,7 +62,7 @@ int AddToVector(Vector *vector, void *item, size_t size, int alloc)
     {
         success = DoubleVectorSize(vector);
     }
-    if(alloc) {
+    if(STATIC == flag) {
         newItem = malloc(size);
         memcpy(newItem, item, size);
     }
@@ -81,7 +81,7 @@ int AddToVector(Vector *vector, void *item, size_t size, int alloc)
 int DeleteByIndex(Vector *vector, int index )
 {
     void* item = GetFromVector(vector, index);
-    if(item == NULL) return 0;  //Item doesn't exist
+    if(NULL == item) return 0;  //Item doesn't exist
     ReformVector(vector, item);
     free(item);                 //Free the item
     return 1;
