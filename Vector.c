@@ -1,3 +1,8 @@
+//
+// Created by christopher on 3/20/15.
+//
+
+#include "Vector.h"
 /*
  * =====================================================================================
  *	Author: Christopher Schneider
@@ -9,13 +14,13 @@
  */
 
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include "Vector.h"
 
 //Prototypes
 inline static int DoubleVectorSize(Vector *);
-inline static void ReformVector(Vector *vector, void* item);
+inline static void ReformVector(Vector *, void* );
 
 //Constants
 const int DEFAULT_VECTOR_SIZE = 64;
@@ -35,6 +40,7 @@ Vector *InitVector()
         vector->size = 0;
         vector->capacity = DEFAULT_VECTOR_SIZE;
         vector->items = malloc(sizeof(void*) * vector->capacity);
+        vector->itemSize = malloc(sizeof(size_t) * vector->capacity);
         return vector;
     }
 }
@@ -44,16 +50,24 @@ Vector *InitVector()
     Adds a symbol to vector. On success, 1 is returned
     @param  item        -- item to add
     @param  vector      -- Vector to add item to
+    @param  size        -- Size of item in vector
+    @param  alloc       -- If item needs memory allocated
     @return             -- 1 on success, 0 on failure
 */
-int AddToVector(Vector *vector, void *item)
+int AddToVector(Vector *vector, void *item, size_t size, int alloc)
 {
     int success = 1; //Assume result
+    void* newItem = item;
     if(vector->capacity == vector->size) //Increase size if full
     {
         success = DoubleVectorSize(vector);
     }
-    vector->items[vector->size++] = item;
+    if(alloc) {
+        newItem = malloc(size);
+        memcpy(newItem, item, size);
+    }
+    vector->items[vector->size] = newItem;
+    vector->itemSize[vector->size++] = size;
     return success;
 }
 
@@ -68,72 +82,11 @@ int DeleteByIndex(Vector *vector, int index )
 {
     void* item = GetFromVector(vector, index);
     if(item == NULL) return 0;  //Item doesn't exist
-    ReformVector(vector, index, item);
+    ReformVector(vector, item);
     free(item);                 //Free the item
     return 1;
 }
 
-/*  FUNCTION: DeleteItem
-    Checks if an item is present in vector then removes it.
-    If the item was successfully located and removed, 1 is returned
-    otherwise 0 is returned. If an unknown type is used, -1 is returned
-
-    WIP!
-
-    Acceptable string values for type:
-    "short"
-    "int"
-    "long"
-    "double"
-    "float"
-    "char*"
-    "char"
-    "pointer"
-    @param  item        -- item to delete
-    @param  vector      -- Vector to add item to
-    @param  type        -- The data type of the item
-    @return             -- 1 on success, 0 on failure, -1 if type not recognized
-*/
-int DeleteItem(Vector *vector, void *item, char* type)
-{
-    if(strcmp(type, "int") == 0)
-    {
-
-    }
-    else if(strcmp(type, "long") == 0)
-    {
-
-    }
-    else if(strcmp(type, "double") == 0)
-    {
-
-    }
-    else if(strcmp(type, "float") == 0)
-    {
-
-    }
-    else if(strcmp(type, "char*") == 0)
-    {
-
-    }
-    else if(strcmp(type, "char") == 0)
-    {
-
-    }
-    else if(strcmp(type, "pointer") == 0)
-    {
-
-    }
-    else if(strcmp(type, "short") == 0)
-    {
-
-    }
-    else //Type not recognized
-    {
-        return -1;
-    }
-    return 0;
-}
 
 
 /*  FUNCTION: DestroyVector
@@ -145,21 +98,20 @@ void DestroyVector(Vector *vector)
         DeleteByIndex(vector, vector->size - 1);
     }
     free(vector->items);
+    free(vector->itemSize);
     free(vector);
 }
 
 /*
     FUNCTION: CharExistsInVector
     Checks if a specific char is present in the vector
-
     If item is found, its index is returned
     If item is not found, -1 is returned
-
     @param vector   --  The vector to examine
     @param item   --  The item to look for
     @return       -- The index of the item or -1 if it doesn't exist
  */
-int CharExistsInVector(Vector *vector, void *item)
+int StringExistsInVector(Vector *vector, void *item)
 {
     int vectorSize = vector->size-1;
     int result = -1; //If not found, result is set -1
@@ -204,9 +156,11 @@ void* GetFromVector(Vector *vector, int index)
 inline static int DoubleVectorSize(Vector *vector)
 {
     void **symbols = realloc(vector->items, sizeof(void*) * vector->capacity * 2);
-    if(symbols != NULL)
+    size_t *sizes = realloc(vector->itemSize, sizeof(size_t) * vector->capacity*2);
+    if(symbols != NULL && sizes != NULL)
     {
         vector->items = symbols; //Assign realloc'd symbol table to new symbol table
+        vector->itemSize = sizes;
         vector->capacity *= 2; //Double symbol table size
         return 1;
     }
@@ -222,7 +176,7 @@ inline static int DoubleVectorSize(Vector *vector)
     @param index    -- Index of the item being removed
     @param item     -- The item being removed
  */
-inline static void ReformVector(Vector *vector,void* item)
+inline static void ReformVector(Vector *vector, void* item)
 {
     int i = 0, j = 1;
     int removeCount = 1; //Number of items to be removed
@@ -233,9 +187,8 @@ inline static void ReformVector(Vector *vector,void* item)
         j++;
     }
 
-    for(i; i < vector->size; i++, j++)
+    for(; i < vector->size; i++, j++)
     {
-
         while(vector->items[j] == item)  //Check for multiple references to an item
         {
             if (vector->items[j] == item)
@@ -253,3 +206,29 @@ inline static void ReformVector(Vector *vector,void* item)
         vector->items[temp++] = NULL;
 }
 
+
+/*FUNCTION: CharExistsInVector
+    Iterates over a specified index in the vector.
+    If the item is found in the vector entry, the index is returned.
+    Otherwise, a negative number is returned
+    @param Vector   -- The vector to search
+    @param index    -- The index of the item to search
+    @param item     -- The item to search for
+
+
+    //NOTE to me: add size of entry in vector one day
+    so this works with multiple data types
+ */
+int CharExistsInVector(Vector *vector, int index, void* item){
+    char* entry = (char*)GetFromVector(vector, index);
+    char* c = (char*)&item;
+    int entrySize = sizeof(entry) - 1;
+    while(entrySize >= 0)
+    {
+        if( *entry++  == *c)
+            return entrySize;
+        else
+            entrySize--;
+    }
+    return -1;
+}

@@ -12,10 +12,13 @@
 #define VECTOR_H
 
 
+#include <stddef.h>
+
 typedef struct{
-    int size;       //Number of items currently in symbol table
-    int capacity;   //Max size of symbol table
+    int size;       //Number of items currently in vector
+    int capacity;   //Max size of vector
     void** items;   //Item in vector
+    size_t* itemSize;  //Size of item
 } Vector;
 
 /*
@@ -32,7 +35,7 @@ Vector *InitVector();
     @param  vector      -- Vector to add symbol to
     @return             -- 1 on success
 */
-int AddToVector(Vector*, void*);
+int AddToVector(Vector*, void*, size_t, int);
 
 
 /*  FUNCTION: DeleteByIndex
@@ -45,10 +48,6 @@ int AddToVector(Vector*, void*);
 int DeleteByIndex(Vector *vector, int index );
 
 
-//Not implemented
-int DeleteItem(Vector *vector, void *item, char* type);
-
-
 /*  FUNCTION: DestroyVector
     Frees memory alloc'd to vector
     vector -- The vector table to free*/
@@ -58,15 +57,13 @@ void DestroyVector(Vector*);
 /*
     FUNCTION: CharExistsInVector
     Checks if a specific char* is present in the vector
-
     If item is found, its index is returned
     If item is not found, -1 is returned
-
     @param vector   --  The vector to examine
     @param item   --  The item to look for
     @return       -- The index of the item or -1 if it doesn't exist
  */
-int CharExistsInVector(Vector*, void*);
+int CharExistsInVector(Vector*, int, void*);
 
 
 /*FUNCTION: GetFromVector
