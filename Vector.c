@@ -1,8 +1,5 @@
-//
-// Created by christopher on 3/20/15.
-//
 
-#include "Vector.h"
+
 /*
  * =====================================================================================
  *	Author: Christopher Schneider
